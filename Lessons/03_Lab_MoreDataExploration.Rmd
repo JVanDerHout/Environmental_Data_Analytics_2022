@@ -25,7 +25,7 @@ R treats objects differently based on their characteristics. For more informatio
 
 * **Lists** Ordered collection of elements that can have different modes.
 
-* **Data Frames** 2 dimensional structure that is more general than a matrix. Columns can have different modes (e.g., numeric and factor). When we import csv files into the R workspace, they will enter as data frames.
+* **Data Frames** 2 dimensional structure that is more general than a matrix. Columns can have different modes (e.g., numeric and factor). When we import csv files into the R workspace, they will enter as data frames. Requires same number of rows per column, and if not availble use NAs.
 
 Define what each new piece of syntax does below (i.e., fill in blank comments). Note that the R chunk has been divided into sections (# at beginning of line, ---- at end)
 ```{r}
@@ -37,20 +37,21 @@ vector2
 vector3 <- c(TRUE,TRUE,TRUE,FALSE,TRUE,FALSE) #logical vector
 vector3
 
-vector1[3] # 
+vector1[3] # the third element of vector 1
 
 # Matrices ----
-matrix1 <- matrix(1:20, nrow = 5,ncol = 4) # 
+matrix1 <- matrix(1:20, nrow = 5,ncol = 4) #create matrix with 5 rows and 4 columns with count 1 to 20
 matrix1
-matrix2 <- matrix(1:20, nrow = 5, ncol = 4, byrow = TRUE) #
+matrix2 <- matrix(1:20, nrow = 5, ncol = 4, byrow = TRUE) #same as above but numbers by row instead of column
 matrix2
 matrix3 <- matrix(1:20, nrow = 5, ncol = 4, byrow = TRUE, # return after comma continues the line
                   dimnames = list(c("uno", "dos", "tres", "cuatro", "cinco"), 
-                                  c("un", "deux", "trois", "cat"))) #
+                                  c("un", "deux", "trois", "cat"))) #same as matrix2 with labels for columns and rows
+matrix3
 
-matrix1[4, ] #
-matrix1[ , 3] #
-matrix1[c(12, 14)] #
+matrix1[4, ] #column 4
+matrix1[ , 3] # row 4
+matrix1[c(12, 14)] # 
 matrix1[c(12:14)] #
 matrix1[2:4, 1:3] #
 
@@ -79,13 +80,11 @@ dataframe1$ID
 ```
 Question: How do the different types of data appear in the Environment tab?
 
-> Answer: 
+> Answer: Data, Values and Functions 
 
 Question: In the R chunk below, write "dataframe1$". Press `tab` after you type the dollar sign. What happens?
 
-> Answer: 
-
-
+> Answer: If you type the name of the data frame and press $ you will see the options of the columns in the data frame. 
 
 
 ### Coding challenge
@@ -93,24 +92,37 @@ Question: In the R chunk below, write "dataframe1$". Press `tab` after you type 
 Find a ten-day forecast of temperatures (Fahrenheit) for Durham, North Carolina. Create two vectors, one representing the high temperature on each of the ten days and one representing the low.
 
 ```{r}
-
+highforecast <- c(49, 57, 40, 41, 44, 37, 41, 51, 52, 60) #would name this as farneheit next time for more clarity
+lowforecast <- c(30, 30, 18, 26, 26, 18,26, 28, 40, 44)
 ```
 
 Now, create two additional vectors that include the ten-day forecast for the high and low temperatures in Celsius. Use a function to create the two new vectors from your existing ones in Fahrenheit.
 
 ```{r}
+convertcelcius <-  function(x){
+  celciusconversion<-(x-32)/1.8
+  return(celciusconversion)
+}
 
+highcelcius <- convertcelcius(highforecast)
+highcelcius
+lowcelcius <- convertcelcius(lowforecast)
+lowcelcius
 ```
 
 Combine your four vectors into a data frame and add informative column names.
 
 ```{r}
-
+forecast <- data.frame (highcelcius, lowcelcius, highforecast, lowforecast) #creating the data frame
+round(forecast, digits = 2) #printing with 2 decimal points
 ```
 
 Use the common functions `summary` and `sd` to obtain basic data summaries of the ten-day forecast. How would you call these functions differently for the entire data frame vs. a single column? Attempt to demonstrate both options below.
 
 ```{r}
+summary(forecast)
+as.data.frame(forecast)
+sd(forecast$highcelcius) #standard deviation for high celcius row
 
 ```
 
@@ -133,9 +145,10 @@ Remember formatting of dates in R:
 # An example is provided to get you started.
 # (code must be uncommented)
 today <- Sys.Date()
-format(today, format = "%B")
-#format(today, format = "")
-#format(today, format = "")
+today #prints in default
+format(today, format = "%B") #gives unabreviated month
+format(today, format = "%Y") #gives full year
+format(today, format = "%m/%d/%Y") #full date in another format
 #format(today, format = "")
 
 ```
@@ -153,9 +166,13 @@ library(lubridate)
 
 #Ex1
 str_today <- "2021-feb-3"
+str_today
+class(str_today)
+#use function ymd to transform character into date
 #Since the format is year-month-day we will use function ymd()
 date_obj_today <- ymd(str_today)
 date_obj_today
+class(date_obj_today) #now the class is a date and we can use the above formatting
 
 #Ex2
 str_today <- "21-feb-3"

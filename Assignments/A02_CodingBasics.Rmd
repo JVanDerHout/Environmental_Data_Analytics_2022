@@ -93,11 +93,6 @@ passfail <- function(x){
 
 #neither of these functions are picking up on a fail grade from bart
 #tried it with both original and transposed data frame
-homergrade <- passfail("grading$homer"); homergrade
-margegrade <- passfail("grading$marge"); margegrade
-lisagrade <- passfail("grading$lisa"); lisagrade
-bartgrade <- passfail("grading$bart"); bartgrade #says pass but should say fail
-results <- passfail("grading$scores")
 passfail(scores) #this does work... but can't get it to run on the whole df...
 ```
 

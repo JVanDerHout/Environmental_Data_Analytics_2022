@@ -1,8 +1,10 @@
 ---
 title: "Assignment 3: Data Exploration"
-author: "Student Name, Section #0"
+author: "Jackie Van Der Hout, Section #1"
 output: pdf_document
 geometry: margin=2.54cm
+editor_options: 
+  chunk_output_type: console
 ---
 
 ## OVERVIEW
@@ -23,7 +25,11 @@ The completed exercise is due on <>.
 
 1. Check your working directory, load necessary packages (tidyverse), and upload two datasets: the ECOTOX neonicotinoid dataset (ECOTOX_Neonicotinoids_Insects_raw.csv) and the Niwot Ridge NEON dataset for litter and woody debris (NEON_NIWO_Litter_massdata_2018-08_raw.csv). Name these datasets "Neonics" and "Litter", respectively. **Be sure to add the `stringsAsFactors = TRUE` parameter to the function when reading in the CSV files.**
 ```{r,  message = FALSE}
-
+getwd()
+library(tidyverse)
+Neonics <- read.csv("/Users/Jackie/Box/Classes Spring 2022/Environmental Data Analytics/Environmental_Data_Analytics_2022/Data/Raw/ECOTOX_Neonicotinoids_Insects_raw.csv", stringsAsFactors = TRUE)
+#stringAsFactors changes characters to factor for analysis
+Litter <- read.csv("/Users/Jackie/Box/Classes Spring 2022/Environmental Data Analytics/Environmental_Data_Analytics_2022/Data/Raw/NEON_NIWO_Litter_massdata_2018-08_raw.csv", stringsAsFactors = TRUE)
 ```
 
 ## Learn about your system
@@ -47,34 +53,42 @@ The completed exercise is due on <>.
 
 ## Obtain basic summaries of your data (Neonics)
 
-5. What are the dimensions of the dataset?
+5. What are the dimensions of the dataset? A: 4623 x 30
 
 ```{r}
-
+dim(Neonics)
 ```
 
 6. Using the `summary` function on the "Effect" column, determine the most common effects that are studied. Why might these effects specifically be of interest?
 ```{r}
+NeonicsEffects <- summary(Neonics$Effect)
+sort(NeonicsEffects)
 
 ```
 
-> Answer: 
+> Answer: The most common effects studied are Population, Mortality, Behavior, Feeding behavior, Reproduction, Avoidance and Development. The effects of this insecticide on insects in these categories could be of interest to researches because they provide insight into the physiological effects of the insecticide on the basic life cycle functions of insects. 
 
 7. Using the `summary` function, determine the six most commonly studied species in the dataset (common name). What do these species have in common, and why might they be of interest over other insects? Feel free to do a brief internet search for more information if needed.
 
 ```{r}
+NeonicsSpecies <- summary(Neonics$Species.Common.Name)
+sort(NeonicsSpecies, decreasing = TRUE)
 
+#you can also do this, which just gives top four:
+head(summary(Neonics$Species.Common.Name))
 ```
 
-> Answer: 
+> Answer: The top six species are Honey Bee, Parasitic Wasp Buff, Tailed Bumblebee, Carniolan Honey Bee, 
+The "other" category which is the largest 
 
 8. Concentrations are always a numeric value. What is the class of Conc.1..Author. in the dataset, and why is it not numeric?
 
 ```{r}
-
+class(Neonics$Conc.1..Author.)
+head(Neonics$Conc.1..Author.)
 ```
 
-> Answer:
+> Answer: The class of this variable is "factor". The reason it is a factor instead of a number is because the numbers have sympols in them such as > and ~
 
 
 
@@ -82,50 +96,73 @@ The completed exercise is due on <>.
 
 9. Using `geom_freqpoly`, generate a plot of the number of studies conducted by publication year. 
 ```{r}
+ggplot(Neonics)+
+  geom_freqpoly(aes(x = Publication.Year), bins = 60)+ #what should I set my bins to??
+  scale_x_continuous(limits = c(1980, 2019))
 
 ```
 
 10. Reproduce the same graph but now add a color aesthetic so that different Test.Location are displayed as different colors.
 ```{r}
-
+ggplot(Neonics)+
+  geom_freqpoly(aes(x = Publication.Year, color = Neonics$Test.Location), bins = 60)+ #what should I set my bins to??
+  scale_x_continuous(limits = c(1980, 2019))
 ```
 
 Interpret this graph. What are the most common test locations, and do they differ over time?
 
-> Answer: 
+> Answer: From the 1980s until the early 2000s, the most common testing locations were "field natural". From the early 2000s until the present the lab studies have become the dominant study type and location. 
 
 11. Create a bar graph of Endpoint counts. What are the two most common end points, and how are they defined? Consult the ECOTOX_CodeAppendix for more information. 
 
 ```{r}
 
+ggplot(Neonics)+
+  geom_bar(aes(Neonics$Endpoint))+
+  theme(axis.text.x = element_text(angle = 90)) #rotates text element of X axis
+
 ```
 
-> Answer: 
+> Answer: The two most common endpoints by far are LOEL and NOEL. LOEL stands for "lowest observable effect level" which is the lowest concentration that produces effects that are significantly different than the controls, in a terrestrial environment. NOEL is also a terrestrial measurement and stands for "No Observable Effect Level" and is inversely the highest concentration which does not produce significantly different responses from those of the controls. 
 >
 
 ## Explore your data (Litter)
 
 12. Determine the class of collectDate. Is it a date? If not, change to a date and confirm the new class of the variable. Using the `unique` function, determine which dates litter was sampled in August 2018. 
 ```{r}
-
+class(Litter$collectDate) #currently factor
+library(lubridate)
+Litter$collectDate <- ymd(Litter$collectDate) #overwritting litter column
+class(Litter$collectDate)
+unique(Litter$collectDate)#collected on "2018-08-02" and "2018-08-30"
 ```
 
 13. Using the `unique` function, determine how many plots were sampled at Niwot Ridge. How is the information obtained from `unique` different from that obtained from `summary`?
 
 ```{r}
-
+?unique
+unique(Litter$namedLocation)
+summary(Litter$namedLocation)
+###come back to this one
 ```
 
 > Answer: 
 
 14. Create a bar graph of functionalGroup counts. This shows you what type of litter is collected at the Niwot Ridge sites. Notice that litter types are fairly equally distributed across the Niwot Ridge sites.
 ```{r}
-
+ggplot(Litter, aes(x = functionalGroup))+
+  geom_bar()
 ```
 
 15. Using `geom_boxplot` and `geom_violin`, create a boxplot and a violin plot of dryMass by functionalGroup. 
 ```{r}
+ggplot(Litter) +
+  geom_boxplot(aes(x = dryMass, y = functionalGroup))
 
+ggplot(Litter) +
+  geom_violin(aes(x = dryMass, y = functionalGroup), 
+              draw_quantiles = c(0.25, 0.5, 0.75))
+###need help with this error message
 ```
 
 Why is the boxplot a more effective visualization option than the violin plot in this case?

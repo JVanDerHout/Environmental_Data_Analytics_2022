@@ -29,9 +29,9 @@ getwd()
 library(tidyverse)
 
 # 3. Import datasets
-USGS.flow.data <- read.csv("./Data/Processed/USGS_Site02085000_Flow_Processed.csv")
+USGS.flow.data <- read.csv("/Users/Jackie/Box/Classes Spring 2022/Environmental Data Analytics/Environmental_Data_Analytics_2022/Data/Processed/USGS_Site02085000_Flow_Processed.csv")
 
-#View(USGS.flow.data)
+View(USGS.flow.data)
 # Alternate option: click on data frame in Environment tab
 
 colnames(USGS.flow.data)
@@ -67,34 +67,34 @@ ggplot(USGS.flow.data, aes(x = discharge.mean.approval)) +
 Visualize distributions of values for continuous numerical variables. What is happening in each line of code? Insert a comment above each line.
 
 ```{r, fig.height = 3, fig.width = 4}
-#
+#discharge mean historgram with default binwidths
 ggplot(USGS.flow.data) +
   geom_histogram(aes(x = discharge.mean))
 
-#
+#discharge mean histogram with binwidth of 10
 ggplot(USGS.flow.data) +
   geom_histogram(aes(x = discharge.mean), binwidth = 10)
 
-#
+#bindwidth of 20
 ggplot(USGS.flow.data) +
   geom_histogram(aes(x = discharge.mean), bins = 20)
 
-#
+#narrowing the x axis scale for better viz
 ggplot(USGS.flow.data, aes(x = discharge.mean)) +
   geom_histogram(binwidth = 10) + 
   scale_x_continuous(limits = c(0, 500))
   
-#
+#historgram of the mean gage height
 ggplot(USGS.flow.data) +
   geom_histogram(aes(x = gage.height.mean))
 
 ```
 ### Frequency line graph (function: geom_freqpoly)
 
-An alternate to a histogram is a frequency polygon graph (distributions of values for continuous numerical variables). Instead of displaying bars,  counts of continuous variables are displayed as lines. This is advantageous if you want to display multiple variables or categories of variables at once.
+An alternate to a histogram is a frequency polygon graph (c). Instead of displaying bars,  counts of continuous variables are displayed as lines. This is advantageous if you want to display multiple variables or categories of variables at once.
 
 ```{r, fig.height = 3, fig.width = 4}
-#
+#displaying gage height mean, min, and max count 
 ggplot(USGS.flow.data) +
   geom_freqpoly(aes(x = gage.height.mean), bins = 50) +
   geom_freqpoly(aes(x = gage.height.min), bins = 50, color = "darkgray") +
@@ -151,20 +151,25 @@ ggplot(USGS.flow.data) +
 Question: under what circumstances would it be beneficial to use each of these graph types (bar plot, histogram, frequency polygon, box-and whisker, violin, scatterplot)?
 
 > Answer: 
-
+Bar plots are for categorical varaibles. 
+Historgrams are for continuous numerical values. 
+Frequency polygons are distributions of values for continuous numerical variables meant for seeing multiple variables at once.
+Box and whisker are distributions of values for continuous numerical variables
+Violin represents density distributions
+Scatterplots are meant to be used when you have a continuous and numerical variable
 ## Ending discussion
 
 What did you learn about the USGS discharge dataset today? What separate insights did the different graph types offer?
-> Answer: 
+> Answer: Discharge and gage height are more or less linearly increasing with one another, and are very tightly correlated. The mean discharge over the years has been more or less the same with some strong outliers in large flood events scattered over the years. 
 
 
 How can multiple options for data exploration inform our understanding of our data?
 
-> Answer: 
+> Answer: They can provide perspectives on comparing variables that otherwise wouldn't be considered with one another to look for emerging patterns that may not be logically considered by may be statistically meaningful.
 
 
 Do you see any patterns in the USGS data for the Eno River? What might be responsible for those patterns and/or relationships?
 
-> Answer: 
+> Answer: Patterns seem to be seasonality and the physical channel's relationship between discharge and gage height. 
 
 

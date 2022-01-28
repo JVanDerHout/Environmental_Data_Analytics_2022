@@ -20,7 +20,7 @@ editor_options:
 
 **Reproducibility**: when someone else (e.g., future self) can obtain the same outcomes from the same dataset and analysis
 
-* Raw data are always separate from processed data
+* Raw data are always separate from processed data - always keep a copy of raw data file
 * Link data transformations with a reproducible pipeline
 * Raw datasets NEVER changed
 * Cleaning/transformations done through coding, not by editing within Excel
@@ -90,10 +90,11 @@ mean(5, 4, 6, 4, 6)
 median(5, 4, 6, 4, 6)
 
 # Conditional statements
+#output will either be true or false
 4 > 5
 4 < 5
-4 != 5
-4 == 5
+4 != 5 # != means "different than"
+4 == 5 # == means "is the same as"
 
 ```
 
@@ -123,6 +124,7 @@ What happens if there is a typo in your code?
 Type the following in the R window: 
 Long_name_for_illustration
 longnameforillustration
+Object names are case sensitive
 
 ```{r}
 long_name_for_illustration <- 11
@@ -146,6 +148,7 @@ ten_sequence <- seq(1, 10)
 ten_sequence
 
 seq(1, 10, 2) # from, to, by
+#sequence of numbers from 1-10 increased by 2
 ```
 
 The basic form of a function is `functionname()`, and the packages we will use in this class will use these basic forms. However, there may be situations when you will want to create your own function. Below is a description of how to write functions through the metaphor of creating a recipe (credit: @IsabellaGhement on Twitter). 
