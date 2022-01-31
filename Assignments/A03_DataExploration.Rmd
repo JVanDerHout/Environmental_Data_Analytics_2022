@@ -27,6 +27,7 @@ The completed exercise is due on <>.
 ```{r,  message = FALSE}
 getwd()
 library(tidyverse)
+setwd("~/../Box/Classes Spring 2022/Environmental Data Analytics/")
 Neonics <- read.csv("/Users/Jackie/Box/Classes Spring 2022/Environmental Data Analytics/Environmental_Data_Analytics_2022/Data/Raw/ECOTOX_Neonicotinoids_Insects_raw.csv", stringsAsFactors = TRUE)
 #stringAsFactors changes characters to factor for analysis
 Litter <- read.csv("/Users/Jackie/Box/Classes Spring 2022/Environmental Data Analytics/Environmental_Data_Analytics_2022/Data/Raw/NEON_NIWO_Litter_massdata_2018-08_raw.csv", stringsAsFactors = TRUE)
@@ -36,18 +37,18 @@ Litter <- read.csv("/Users/Jackie/Box/Classes Spring 2022/Environmental Data Ana
 
 2. The neonicotinoid dataset was collected from the Environmental Protection Agency's ECOTOX Knowledgebase, a database for ecotoxicology research. Neonicotinoids are a class of insecticides used widely in agriculture. The dataset that has been pulled includes all studies published on insects. Why might we be interested in the ecotoxicologoy of neonicotinoids on insects? Feel free to do a brief internet search if you feel you need more background information. 
 
-> Answer: 
+> Answer: The effects of insecticides on insects would provide insights for applicators for what time of year and insect life stages the insecticide should be applied in order to be most effective. Additionally, it may be useful to know if a certain insecticide has effects on unintended beneficial insects, such as pollinators and benthic macroinvertibrates and other non-target species. 
 
 3. The Niwot Ridge litter and woody debris dataset was collected from the National Ecological Observatory Network, which collectively includes 81 aquatic and terrestrial sites across 20 ecoclimatic domains. 32 of these sites sample forest litter and woody debris, and we will focus on the Niwot Ridge long-term ecological research (LTER) station in Colorado. Why might we be interested in studying litter and woody debris that falls to the ground in forests? Feel free to do a brief internet search if you feel you need more background information. 
 
-> Answer: 
+> Answer: Long term ecological monitoring of litter and woody debri provides several applications. Forest managers and scientists may be interested in the biogeochemistry of forest litter to understand the factors that influence nutrient decomposition and cycling. Additionally, comparisons of nutrient cycling in different ecosystems and climates and the effects of climate change on decomposition rates and nutrient levels may be of interest to scientists. Forest litter decomposition not only stays within the forest ecosystem in which it falls but also travels through fluvial systems to downstream sites and has an impact on other both aquatic and terrestrial ecosystem biogeochemistry. 
 
 4. How is litter and woody debris sampled as part of the NEON network? Read the NEON_Litterfall_UserGuide.pdf document to learn more. List three pieces of salient information about the sampling methods here: 
 
-> Answer: 
-*
-*
-*
+> Answer: The National Ecological Observation Network (NEON) collects data on woody debri and litter both elevated and group traps. 
+* Sampling is conducted at sites in the NEON network that have vegetation with a minumum heigh of 2m tall. 
+*Airshed vegetation density is used to determine the sampling plot size for litter collection, with more plots used in less saturated plots. 
+*Litter trap placement is randomized or targetted within a grid depending on the target vegetation type, while also making sure a minumum distance between sampling locations is maintained to rule out covariance between samples. 
 
 
 
@@ -78,8 +79,7 @@ sort(NeonicsSpecies, decreasing = TRUE)
 head(summary(Neonics$Species.Common.Name))
 ```
 
-> Answer: The top six species are Honey Bee, Parasitic Wasp Buff, Tailed Bumblebee, Carniolan Honey Bee, 
-The "other" category which is the largest 
+> Answer: Other than the "other" category, the top six species are Honey Bee, Parasitic Wasp Buff, Tailed Bumblebee, Carniolan Honey Bee, the Bumblee Bee and the Italian Honeybee. With the exception of the wasp, these are all pollinator species beneficial to crop plants and native plants. The bees and wasps may be being studied frequently to ensure that insecticides applied do not adversely affect these populations. 
 
 8. Concentrations are always a numeric value. What is the class of Conc.1..Author. in the dataset, and why is it not numeric?
 
@@ -88,8 +88,7 @@ class(Neonics$Conc.1..Author.)
 head(Neonics$Conc.1..Author.)
 ```
 
-> Answer: The class of this variable is "factor". The reason it is a factor instead of a number is because the numbers have sympols in them such as > and ~
-
+> Answer: The class of this variable is "factor". The reason it is a factor instead of a number is because the numbers have sympols in them such as > and ~ which when the dataset was imported using the stringsAsFactors = TRUE command labelled them as factors. 
 
 
 ## Explore your data graphically (Neonics)
@@ -97,7 +96,7 @@ head(Neonics$Conc.1..Author.)
 9. Using `geom_freqpoly`, generate a plot of the number of studies conducted by publication year. 
 ```{r}
 ggplot(Neonics)+
-  geom_freqpoly(aes(x = Publication.Year), bins = 60)+ #what should I set my bins to??
+  geom_freqpoly(aes(x = Publication.Year), bins = 40)+ #chose 40 after trying many other values for best visualization
   scale_x_continuous(limits = c(1980, 2019))
 
 ```
@@ -105,7 +104,7 @@ ggplot(Neonics)+
 10. Reproduce the same graph but now add a color aesthetic so that different Test.Location are displayed as different colors.
 ```{r}
 ggplot(Neonics)+
-  geom_freqpoly(aes(x = Publication.Year, color = Neonics$Test.Location), bins = 60)+ #what should I set my bins to??
+  geom_freqpoly(aes(x = Publication.Year, color = Test.Location), bins = 40)+ 
   scale_x_continuous(limits = c(1980, 2019))
 ```
 
@@ -118,8 +117,8 @@ Interpret this graph. What are the most common test locations, and do they diffe
 ```{r}
 
 ggplot(Neonics)+
-  geom_bar(aes(Neonics$Endpoint))+
-  theme(axis.text.x = element_text(angle = 90)) #rotates text element of X axis
+  geom_bar(aes(Endpoint))+
+  theme(axis.text.x = element_text(angle = 90)) #rotates text on X axis
 
 ```
 
@@ -132,21 +131,20 @@ ggplot(Neonics)+
 ```{r}
 class(Litter$collectDate) #currently factor
 library(lubridate)
-Litter$collectDate <- ymd(Litter$collectDate) #overwritting litter column
-class(Litter$collectDate)
-unique(Litter$collectDate)#collected on "2018-08-02" and "2018-08-30"
+Litter$collectDate <- ymd(Litter$collectDate) #overwritting litter column as a date
+class(Litter$collectDate) #now R knows it is a date
+unique(Litter$collectDate)#collected on two dates, "2018-08-02" and "2018-08-30"
 ```
 
 13. Using the `unique` function, determine how many plots were sampled at Niwot Ridge. How is the information obtained from `unique` different from that obtained from `summary`?
 
 ```{r}
-?unique
-unique(Litter$namedLocation)
-summary(Litter$namedLocation)
-###come back to this one
+unique(Litter$plotID) 
+summary(Litter$plotID) 
+
 ```
 
-> Answer: 
+> Answer: 12 sample plots were used at Niwot Ridget. The unique function shows that there were 12 unique sites but not more information, whereas the summary function explains how many samples were taken at each of the 12 sites.  
 
 14. Create a bar graph of functionalGroup counts. This shows you what type of litter is collected at the Niwot Ridge sites. Notice that litter types are fairly equally distributed across the Niwot Ridge sites.
 ```{r}
@@ -157,18 +155,19 @@ ggplot(Litter, aes(x = functionalGroup))+
 15. Using `geom_boxplot` and `geom_violin`, create a boxplot and a violin plot of dryMass by functionalGroup. 
 ```{r}
 ggplot(Litter) +
-  geom_boxplot(aes(x = dryMass, y = functionalGroup))
+  geom_boxplot(aes(x = functionalGroup, y = dryMass))
 
-ggplot(Litter) +
-  geom_violin(aes(x = dryMass, y = functionalGroup), 
-              draw_quantiles = c(0.25, 0.5, 0.75))
-###need help with this error message
+
+ggplot(Litter)+
+  geom_violin(aes(x = functionalGroup, y=dryMass))
+
 ```
 
 Why is the boxplot a more effective visualization option than the violin plot in this case?
 
 > Answer: 
+Box and whisker plots show distributions of the median values for continuous numerical variables, shown in the interqquatrile range. They show outliers from the IQR and the general pattern of the distribution and are a good way to quickly compare two variables, which is why they work well here. However, the violin plots are meant to show density distributions within the box component of the box and whisker plots, however here the distribution does not appear, showing only a line of variability in range. 
 
 What type(s) of litter tend to have the highest biomass at these sites? 
 
-> Answer: 
+> Answer: Needles tend to have the higest biomass. 
