@@ -34,8 +34,10 @@ summary(NTL.phys.data.PeterPaul$comments)
 class(NTL.phys.data.PeterPaul$sampledate)
 
 # Format sampledate as date
+#always check date format before doing this 
 NTL.phys.data.PeterPaul$sampledate <- as.Date(NTL.phys.data.PeterPaul$sampledate, format = "%Y-%m-%d")
 
+#Wrangling Nutrient Data 
 # Select Peter and Paul Lakes from the nutrient dataset
 NTL.nutrient.data.PeterPaul <- filter(NTL.nutrient.data, lakename == "Paul Lake" | lakename == "Peter Lake")
 
@@ -45,17 +47,20 @@ dim(NTL.nutrient.data.PeterPaul)
 str(NTL.nutrient.data.PeterPaul)
 summary(NTL.nutrient.data.PeterPaul$lakename) 
 # Notice that other lake names didn't go away, even though they have zero values
-NTL.nutrient.data.PeterPaul <- droplevels(NTL.nutrient.data.PeterPaul)
+NTL.nutrient.data.PeterPaul <- droplevels(NTL.nutrient.data.PeterPaul) 
+#gets rid of other Lakes that don't have values but still show up in summary
 summary(NTL.nutrient.data.PeterPaul$lakename)
 summary(NTL.nutrient.data.PeterPaul$comments)
 class(NTL.nutrient.data.PeterPaul$sampledate)
+#formatting dates again
 NTL.nutrient.data.PeterPaul$sampledate <- as.Date(NTL.nutrient.data.PeterPaul$sampledate, format = "%m/%d/%y")
 
+#doing other operations with the pipe method 
 NTL.nutrient.data.PeterPaul <- 
-  NTL.nutrient.data.PeterPaul %>% #
-  mutate(month = month(sampledate)) %>% #
-  select(lakeid:daynum, month, sampledate:comments) %>% # 
-  drop_na(depth)
+  NTL.nutrient.data.PeterPaul %>% #inputting data
+  mutate(month = month(sampledate)) %>% #adding month column
+  select(lakeid:daynum, month, sampledate:comments) %>% # reorderring column order
+  drop_na(depth) #dropping all NA values 
 
 # Save processed nutrient file
 write.csv(NTL.nutrient.data.PeterPaul, row.names = FALSE, 
@@ -63,7 +68,9 @@ write.csv(NTL.nutrient.data.PeterPaul, row.names = FALSE,
 
 # Remove columns that are not of interest for analysis
 NTL.phys.data.PeterPaul.subset <- select(NTL.phys.data.PeterPaul, 
-                                         lakename:irradianceDeck)
+                                         lakename:irradianceDeck) 
+#selecting to keep all columns in range you want to keep
+#removes lake ID 
   
 NTL.nutrient.data.PeterPaul.subset <- select(NTL.nutrient.data.PeterPaul, 
                                              lakename, year4, daynum, month, sampledate, depth:po4)
@@ -73,7 +80,7 @@ NTL.nutrient.data.PeterPaul.subset <- select(NTL.nutrient.data.PeterPaul,
 ```
 
 
-## Gather and Spread
+## Gather and Spread (tidyr - also included in tidyverse)
 
 For most situations, data analysis works best when you have organized your data into a tidy dataset. A tidy dataset is defined as: 
 * Each variable is a column
@@ -89,23 +96,42 @@ We will work with the new functions from `tidyr`. For gather we will use `pivot_
 #NTL.nutrient.data.PeterPaul.gathered <- gather(NTL.nutrient.data.PeterPaul.subset, "nutrient", "concentration", tn_ug:po4)
 
 # Gather nutrient data into one column using pivot_longer
+#this is the equivalent of pivot in excel
+#wider adds more columns
+#longer adds more rows 
+
+#gathering the nutrient data into one column:
+#transform first into two columns
+#1. category for nutrient
+#2. value 
 NTL.nutrient.data.PeterPaul.gathered <- pivot_longer(NTL.nutrient.data.PeterPaul.subset,tn_ug:po4, names_to = "nutrient", values_to = "concentration")
+#assigns new values and creates "nutrient" column and "concentration" column 
+#this replaces a column for each nutrient with two columns for all nutrients 
+#gathered dataset will have more rows than the original dataset
 
+#removing NAs in concentration column to make a more tidy dataset
 NTL.nutrient.data.PeterPaul.gathered <- subset(NTL.nutrient.data.PeterPaul.gathered, !is.na(concentration))
-count(NTL.nutrient.data.PeterPaul.gathered, nutrient)
+#!is.na will return a logical operator to tell you if there are NA values and remove those values 
+count(NTL.nutrient.data.PeterPaul.gathered$nutrient)
+#R is counting how many observations there are for each nutrient type
 
+#storing processed dataset on a file 
 write.csv(NTL.nutrient.data.PeterPaul.gathered, row.names = FALSE, 
           file = "./Data/Processed/NTL-LTER_Lake_Nutrients_PeterPaulGathered_Processed.csv")
 
+#PIVOTWIDER
 # Spread nutrient data into separate columns
 #NTL.nutrient.data.PeterPaul.spread <- spread(NTL.nutrient.data.PeterPaul.gathered, nutrient, concentration)
 
 # Spread nutrient data into separate columns using pivot_wider
+#trying to go back to the original layout of the data from 2 columns to 5 columns
 NTL.nutrient.data.PeterPaul.spread2 <- pivot_wider(NTL.nutrient.data.PeterPaul.gathered, names_from = nutrient, values_from = concentration)
+#R is taking the names from column nutrient and values from the column concentration
 
 # Split components of cells into multiple columns
 # Opposite of 'separate' is 'unite'
 NTL.nutrient.data.PeterPaul.dates <- separate(NTL.nutrient.data.PeterPaul.subset, sampledate, c("Y", "m", "d"))
+#give column you want to seperate and the format you want it to be separated by (year, month day)
 
 # I recommend using lubridate rather than separate and unite.
 
@@ -115,6 +141,8 @@ NTL.nutrient.data.PeterPaul.dates <- separate(NTL.nutrient.data.PeterPaul.subset
 
 ### Join 
 In many cases, we will want to combine datasets into one dataset. If all column names match, the data frames can be combined with the `rbind` function. If some column names match and some column names don't match, we can combine the data frames using a "join" function according to common conditions that exist in the matching columns. We will demonstrate this with the NTL-LTER physical and nutrient datasets, where we have specific instances when physical and nutrient data were collected on the same date, at the same lake, and at the same depth. 
+
+Only use rbind if all the rows are the same, or cbind if all the columns are the same. Otherwise, make sure to use the join function. 
 
 In dplyr, there are several types of join functions: 
 
@@ -127,8 +155,10 @@ In dplyr, there are several types of join functions:
 Let's say we want to generate a new dataset that contains all possible physical and chemical data for Peter and Paul Lakes. In this case, we want to do a full join.
 
 ```{r}
-
+#full join function with two dataset
 NTL.phys.nutrient.data.PeterPaul <- full_join(NTL.phys.data.PeterPaul.subset, NTL.nutrient.data.PeterPaul.subset)
+#tells you what the common columns of joining were used 
+#full join is a good way to start if you aren't sure which join function to use 
 
 write.csv(NTL.phys.nutrient.data.PeterPaul, row.names = FALSE, 
           file ="./Data/Processed/NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv")
@@ -140,6 +170,7 @@ write.csv(NTL.phys.nutrient.data.PeterPaul, row.names = FALSE,
 The Niwot Ridge litter dataset, when downloaded from NEON, comes packaged with each month as a different .csv file. If we want to analyze the dataset as a single data frame, we need to combine each of these files. 
 
 ```{r}
+#less efficient way to import data
 Litter.June2016 <- read.csv("./Data/Raw/NIWO_Litter/NEON_NIWO_Litter_massdata_2016-06_raw.csv")
 Litter.July2016 <- read.csv("./Data/Raw/NIWO_Litter/NEON_NIWO_Litter_massdata_2016-07_raw.csv")
 Litter.August2016 <- read.csv("./Data/Raw/NIWO_Litter/NEON_NIWO_Litter_massdata_2016-08_raw.csv")
@@ -150,24 +181,36 @@ Litter.2019 <- rbind(Litter.June2016, Litter.July2016, Litter.August2016)
 However, there are 20 months in this dataset, so importing all these files individually would be tedious to code. Here is a more efficient way to import and combine all files.
 
 ```{r}
+#more efficient way to import multiple files 
 LitterFiles = list.files(path = "./Data/Raw/NIWO_Litter/", pattern="*.csv", full.names=TRUE)
+#path is to the folder where the files are located
+#pattern is how the file names end
+#include full names 
 LitterFiles
+#This shows information on al 20 datasets and files 
 
+
+#using a pipe to read each element using read.csv into one object
 Litter <- LitterFiles %>%
-  ldply(read.csv)
+  ldply(read.csv) #from plyr package
 ```
 
 We also have information about individual traps, including the location and type of landcover. Let's join these two datasets. Note that "siteID", "plotID" and "trapID" exist in both datasets, and we can join them by these conditions. Notice the dimensions of the final dataset.
 ```{r}
 Trap <- read.csv("./Data/Raw/NEON_NIWO_Litter_trapdata_raw.csv")
 LitterTrap <- left_join(Litter, Trap, by = c("siteID", "plotID", "trapID"))
+#same number of observations as in litter
+#left join option
+#increased number of columns resulting from both datasets 
 
 dim(Litter)
 dim(Trap)
 dim(LitterTrap)
 
+#selecting just a few columns of interest
 LitterTrap <- LitterTrap %>%
   select(plotID:trapID, collectDate, functionalGroup:qaDryMass, subplotID:geodeticDatum)
+#now there are only 13 variables 
 
 write.csv(LitterTrap, row.names = FALSE, 
           file ="./Data/Processed/NEON_NIWO_Litter_mass_trap_Processed.csv")
@@ -180,16 +223,20 @@ dplyr functionality, combined with the pipes operator, allows us to split datase
 ```{r}
 NTL.PeterPaul.summaries <- 
   NTL.phys.nutrient.data.PeterPaul %>%
-  filter(depth == 0) %>%
-  group_by(lakename, month) %>%
-  filter(!is.na(temperature_C) & !is.na(tn_ug) & !is.na(tp_ug)) %>%
-  summarise(meantemp = mean(temperature_C), 
+  filter(depth == 0) %>% #just information on surface
+  group_by(lakename, month) %>% #group by lake name and month
+  filter(!is.na(temperature_C) & !is.na(tn_ug) & !is.na(tp_ug)) %>% #filter NA for temp, tn_ug and tp_ug
+  summarise(meantemp = mean(temperature_C), #create summaries for all of the below: 
             sdtemp = sd(temperature_C), 
             meanTN = mean(tn_ug), 
             sdTN = sd(tn_ug), 
             meanTP = mean(tp_ug), 
             sdTP = sd(tp_ug))
 
+#now view your print out with all of the above variables
+NTL.PeterPaul.summaries
+
+#save values into csv
 write.csv(NTL.PeterPaul.summaries, row.names = FALSE, 
           file ="./Data/Processed/NTL-LTER_Lake_Summaries_PeterPaul_Processed.csv")
 

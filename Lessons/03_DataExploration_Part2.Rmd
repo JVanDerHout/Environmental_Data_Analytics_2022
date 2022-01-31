@@ -35,13 +35,16 @@ View(USGS.flow.data)
 # Alternate option: click on data frame in Environment tab
 
 colnames(USGS.flow.data)
-str(USGS.flow.data)
+str(USGS.flow.data) #structure of the data
 dim(USGS.flow.data)
 
 # Check our date column
 class(USGS.flow.data$datetime)
 
+#Updating from characters to dates using raw format
 USGS.flow.data$datetime <- as.Date(USGS.flow.data$datetime, format = "%Y-%m-%d") 
+
+#check that date format has been updated
 class(USGS.flow.data$datetime)
 
 ```
@@ -58,7 +61,14 @@ Note: each of these approaches utilize the package "ggplot2". We will be coverin
 Visualize count data for categorical variables. 
 
 ```{r, fig.height = 3, fig.width = 4}
+#keep in mind which values are categorical vs numeric
+#this will affect how the data is plotted 
+
 ggplot(USGS.flow.data, aes(x = discharge.mean.approval)) +
+  geom_bar()
+
+#tweaked version removing NA values 
+ggplot(na.omit(USGS.flow.data), aes(x = discharge.mean.approval)) +
   geom_bar()
 ```
 
@@ -67,7 +77,10 @@ ggplot(USGS.flow.data, aes(x = discharge.mean.approval)) +
 Visualize distributions of values for continuous numerical variables. What is happening in each line of code? Insert a comment above each line.
 
 ```{r, fig.height = 3, fig.width = 4}
-#discharge mean historgram with default binwidths
+
+#you should generally use between 5-20 bins
+
+#discharge mean historgram with default binwidths (default is 30)
 ggplot(USGS.flow.data) +
   geom_histogram(aes(x = discharge.mean))
 
@@ -75,7 +88,7 @@ ggplot(USGS.flow.data) +
 ggplot(USGS.flow.data) +
   geom_histogram(aes(x = discharge.mean), binwidth = 10)
 
-#bindwidth of 20
+#just assigning 20 bins
 ggplot(USGS.flow.data) +
   geom_histogram(aes(x = discharge.mean), bins = 20)
 
@@ -101,6 +114,14 @@ ggplot(USGS.flow.data) +
   geom_freqpoly(aes(x = gage.height.max), bins = 50,  lty = 2) +
   scale_x_continuous(limits = c(0, 10))
 
+#showing the same with a historgram as well for comparison looking at frequency of values
+ggplot(USGS.flow.data) +
+  geom_histogram(aes(x = gage.height.mean), bins = 50)+
+  geom_freqpoly(aes(x = gage.height.mean), bins = 50) +
+  geom_freqpoly(aes(x = gage.height.min), bins = 50, color = "red") +
+  geom_freqpoly(aes(x = gage.height.max), bins = 50,  lty = 2) + #lty = line type, where 2=dashed line
+  scale_x_continuous(limits = c(0, 10))
+
 #
 ggplot(USGS.flow.data) +
   geom_freqpoly(aes(x = gage.height.mean, color = gage.height.mean.approval), bins = 50) +
@@ -123,7 +144,7 @@ A box-and-whisker plot is yet another alternative to histograms (distributions o
 An alternate option is a violin plot, which displays density distributions, somewhat like a hybrid of the box-and-whiskers and the frequency polygon plot.
 
 ```{r, fig.height = 3, fig.width = 4}
-#
+#supplying both x and y variables 
 ggplot(USGS.flow.data) +
   geom_boxplot(aes(x = gage.height.mean.approval, y = gage.height.mean))
 
@@ -143,20 +164,22 @@ Visualize relationships between continuous numerical variables.
 ```{r, fig.height = 3, fig.width = 4}
 ggplot(USGS.flow.data) +
   geom_point(aes(x = discharge.mean, y = gage.height.mean))
+#as you get more volume, gage height doesn't increase as much
 
 ggplot(USGS.flow.data) +
   geom_point(aes(x = datetime, y = discharge.mean))
+#adding datetime is a hybrid between categorical and continuous, showing mean discharge at different times - allows you to see things like flood events 
 ```
 
 Question: under what circumstances would it be beneficial to use each of these graph types (bar plot, histogram, frequency polygon, box-and whisker, violin, scatterplot)?
 
 > Answer: 
-Bar plots are for categorical varaibles. 
-Historgrams are for continuous numerical values. 
+Bar plots are for categorical varaibles and looking at the counts of each category. 
+Historgrams are counts by value intervals for continuous numerical values. 
 Frequency polygons are distributions of values for continuous numerical variables meant for seeing multiple variables at once.
-Box and whisker are distributions of values for continuous numerical variables
+Box and whisker are distributions of the median values for continuous numerical variables, shown in the interqquatrile range. They show outliers from the IQR and the general pattern of the distribution. Good way to quickly compare two data sets. 
 Violin represents density distributions
-Scatterplots are meant to be used when you have a continuous and numerical variable
+Scatterplots are meant to be used when you have a continuous and numerical variable. They add extra distrubutions to the box and whisker plots to look at both range and distribution of that range through the width of the box component of the plots.
 ## Ending discussion
 
 What did you learn about the USGS discharge dataset today? What separate insights did the different graph types offer?
