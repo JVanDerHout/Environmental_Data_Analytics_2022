@@ -81,24 +81,24 @@ Here are some commonly used aesthetic types that can be manipulated in ggplot:
 ggplot(EPAair, aes(x = Date, y = Ozone)) + 
   geom_point()
 
+#creating plot object
 O3plot <- ggplot(EPAair) +
   geom_point(aes(x = Date, y = Ozone))
 print(O3plot)
 
-# Fix this code
+# color goes outside aes ()
 O3plot2 <- ggplot(EPAair) +
-  #geom_point(aes(x = Date, y = Ozone, color = "blue"))
   geom_point(aes(x = Date, y = Ozone), color = "blue")
 print(O3plot2)
 
-# Add additional variables
-# How could you automatically assign a marker color to a variable? 
+#assign shape and colors by variables
 PMplot <- 
   ggplot(EPAair, aes(x = Month, y = PM2.5, shape = as.factor(Year), color = Site.Name)) +
   geom_point()
 print(PMplot)
 
 # Separate plot with facets
+#using facet_wrap by site name to create a plot for each site
 PMplot.faceted <-
   ggplot(EPAair, aes(x = Month, y = PM2.5, shape = as.factor(Year))) +
   geom_point() +
@@ -106,6 +106,7 @@ PMplot.faceted <-
 print(PMplot.faceted)
 
 # Filter dataset within plot building and facet by multiple variables
+#using subset only to select sites of interest by year
 PMplot.faceted2 <- 
   ggplot(subset(EPAair, Site.Name == "Clemmons Middle" | Site.Name == "Leggett" |
                   Site.Name == "Bryson City"), 
@@ -128,13 +129,14 @@ print(PMplot.line)
 ### Plotting the relationship between two continuous variables: Scatterplot
 
 ```{r, fig.height = 3, fig.width = 4, warning = FALSE}
-# Scatterplot
+# Scatterplot - visualize relationships btwn two continuous datasers
 lightvsDO <- 
   ggplot(PeterPaul.chem.nutrients, aes(x = irradianceWater, y = dissolvedOxygen)) +
   geom_point()
 print(lightvsDO)
+#scale is off
 
-# Adjust axes
+# Adjust axes for better viz
 lightvsDOfixed <- 
   ggplot(PeterPaul.chem.nutrients, aes(x = irradianceWater, y = dissolvedOxygen)) +
   geom_point() +
@@ -144,18 +146,23 @@ print(lightvsDOfixed)
 
 # Depth in the fields of limnology and oceanography is on a reverse scale
 tempvsdepth <- 
-  ggplot(PeterPaul.chem.nutrients, aes(x = temperature_C, y = depth)) +
-  #ggplot(PeterPaul.chem.nutrients, aes(x = temperature_C, y = depth, color = daynum)) +
+  ggplot(PeterPaul.chem.nutrients, aes(x = temperature_C, y = depth, color = daynum)) +
   geom_point() +
-  scale_y_reverse()
+  scale_y_reverse() #reverse y axis for limnology
 print(tempvsdepth)
 
+#adding color by depth
+#adding a trendline in ggplot 
 NvsP <-
   ggplot(PeterPaul.chem.nutrients, aes(x = tp_ug, y = tn_ug, color = depth)) +
   geom_point() +
   geom_smooth(method = lm) +
   geom_abline(aes(slope = 16, intercept = 0))
 print(NvsP)
+#geom_smooth adds trendline from data
+#geom_abline you add your own trendline
+
+
 
 ```
 
@@ -166,9 +173,10 @@ What might be more effective ways to display the information? Navigate to the bo
 
 ```{r, fig.height = 3, fig.width = 4, warning = FALSE}
 # Box and whiskers plot
+#better than bar plot with error bars
 Nutrientplot3 <-
   ggplot(PeterPaul.chem.nutrients.gathered, aes(x = lakename, y = concentration)) +
-  geom_boxplot(aes(color = nutrient)) # Why didn't we use "fill"?
+  geom_boxplot(aes(color = nutrient)) # codes each nutrient as a different color 
 print(Nutrientplot3)
 
 # Dot plot
@@ -178,13 +186,13 @@ Nutrientplot4 <-
                stackdir = "center", position = "dodge", dotsize = 2) #
 print(Nutrientplot4)
 
-# Violin plot
+# Violin plot - better for larger sample size
 Nutrientplot5 <-
   ggplot(PeterPaul.chem.nutrients.gathered, aes(x = lakename, y = concentration)) +
   geom_violin(aes(color = nutrient)) #
 print(Nutrientplot5)
 
-# Frequency polygons
+# Frequency polygons for different nutrients
 # Using a tidy dataset
 Nutrientplot6 <-
   ggplot(PeterPaul.chem.nutrients) +
