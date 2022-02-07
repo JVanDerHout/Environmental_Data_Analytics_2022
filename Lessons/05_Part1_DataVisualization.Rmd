@@ -194,6 +194,8 @@ print(Nutrientplot5)
 
 # Frequency polygons for different nutrients
 # Using a tidy dataset
+#axes need to be updated, and need legend
+#don't do this
 Nutrientplot6 <-
   ggplot(PeterPaul.chem.nutrients) +
   geom_freqpoly(aes(x = tn_ug), color = "darkred") +
@@ -203,7 +205,8 @@ Nutrientplot6 <-
   geom_freqpoly(aes(x = po4), color = "red") 
 print(Nutrientplot6)
 
-# Using a gathered dataset
+# Using a gathered dataset to better above plot gives automatic legend 
+#do this instead
 Nutrientplot7 <-   
   ggplot(PeterPaul.chem.nutrients.gathered) +
   geom_freqpoly(aes(x = concentration, color = nutrient))
