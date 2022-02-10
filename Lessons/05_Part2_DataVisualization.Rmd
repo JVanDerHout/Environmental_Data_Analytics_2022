@@ -40,21 +40,25 @@ O3plot <- ggplot(EPAair) +
   geom_point(aes(x = Date, y = Ozone)) 
 print(O3plot)
 
+#stays the same
 O3plot1 <- ggplot(EPAair) +
   geom_point(aes(x = Date, y = Ozone)) +
   theme_gray()
 print(O3plot1)
 
+#lighter background
 O3plot2 <- ggplot(EPAair) +
   geom_point(aes(x = Date, y = Ozone)) +
   theme_bw()
 print(O3plot2)
 
+#grid background
 O3plot3 <- ggplot(EPAair) +
   geom_point(aes(x = Date, y = Ozone)) +
   theme_light()
 print(O3plot3)
 
+#no gridline
 O3plot4 <- ggplot(EPAair) +
   geom_point(aes(x = Date, y = Ozone)) +
   theme_classic()
