@@ -19,6 +19,7 @@ editor_options:
 ```{r, message = FALSE}
 library(tidyverse)
 library(agricolae)   
+library(corrplot)
 
 PeterPaul.chem.nutrients <- read.csv("./Data/Processed/NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv", stringsAsFactors = TRUE)
 # Set date to date format
@@ -42,13 +43,13 @@ theme_set(mytheme)
 
 ## T-Test
 
-Continuous response, one categorical explanatory variable with two categories (or comparison to a single value if a one-sample test).
+Can be applied to any data that has a continuous response, one categorical explanatory variable with two categories (or comparison to a single value if a one-sample test).
 
 ### Formulating Hypothesis for µ
 
 Two hypotheses are formed – the null hypothesis and the alternative hypothesis.
 The null hypothesis and the alternative hypothesis combine to cover all possible values for the population mean.
-The null hypothesis must have the equality.
+The null hypothesis must have the equality (ex: greater than / equal to).
 The null and alternative hypotheses are always stated in terms of the population mean (mu).
 
 ### One-sample t-test
@@ -61,12 +62,12 @@ Function t.test()
 **formula** a formula of the form lhs ~ rhs where lhs is a numeric variable giving the data values and rhs either 1 for a one-sample or paired test or a factor with two levels giving the corresponding groups. If lhs is of class "Pair" and rhs is 1, a paired test is done.
 
 
-Are Ozone levels below the threshold for "good" AQI index (0-50)?
+Are Ozone levels below the threshold for "good" AQI index (0-50)? 
 
 
 > Exercise 1: State the hypotheses for testing mean of AQI index.
 
-> Answer: 
+> Answer: less than / equal to 50 is null hypothesis, hypothesis is greater than 50
 
 
 ```{r}
@@ -79,11 +80,16 @@ EPAair.subsample <- sample_n(EPAair, 5000)
 shapiro.test((EPAair.subsample$Ozone))
 ggplot(EPAair, aes(x = Ozone)) +
   geom_histogram() 
+#qqplot
 qqnorm(EPAair$Ozone); qqline(EPAair$Ozone)
 
+#is this sample enough to make the assumption in the null hypothesis? 
 O3.onesample <- t.test(EPAair$Ozone, mu = 50, alternative = "less")
 O3.onesample
+#the p-value is significant, so we reject the null hypothesis
+#yes, we can prove that mu is less than 50 so it is within the threshold for a good standard
 
+#visualize the distribution of the samples
 Ozone.plot <- ggplot(EPAair, aes(x = Ozone)) +
   #geom_density(stat = "count", fill = "gray") +
   geom_density(fill = "gray") +
@@ -94,13 +100,15 @@ print(Ozone.plot)
 
 Write a sentence or two about the results of this test. Include both the results of the test and an interpretation that puts the findings in context of the research question.
 
-> 
+>the ozone levels are within the standard
 
 ### Two-sample t-test
 
-The two-sample *t* test is used to test the hypothesis that the mean of two samples is equivalent. Unlike the one-sample tests, a two-sample test requires a second assumption that the variance of the two groups is equivalent. Are Ozone levels different between 2018 and 2019?
+The two-sample *t* test is used to test the hypothesis that the mean of two samples is equivalent. Unlike the one-sample tests, a two-sample test requires a second assumption that the variance of the two groups is equivalent. 
+Are Ozone levels different between 2018 and 2019? Similar to ANOVA
 
 ```{r}
+#checking for normality
 shapiro.test(EPAair$Ozone[EPAair$Year == 2018])
 shapiro.test(EPAair$Ozone[EPAair$Year == 2019])
 
@@ -118,10 +126,14 @@ ggplot(EPAair, aes(x = Ozone, color = as.factor(Year))) +
 O3.twosample <- t.test(EPAair$Ozone ~ EPAair$Year)
 O3.twosample
 O3.twosample$p.value
+#reject null hypothesis
+#the means are not the same for 2018/2019 
+#or there is not enough data for means to be the same 
 
 # Format as a GLM
 O3.twosample2 <- lm(EPAair$Ozone ~ EPAair$Year)
 summary(O3.twosample2)
+#GLM gives the same p-value
 
 plot(O3.twosample2)
 
@@ -150,9 +162,26 @@ Create three plots, each with appropriately formatted axes and legends. Choose a
 3. geom_violin of ozone divided by year, with the 0.5 quantile marked as a horizontal line. Add letters representing a significant difference between 2018 and 2019. 
 
 ```{r}
-#Exercise 2:
+#Exercise 2 (make sure to set Year as factor):
+#1 
+ggplot(EPAair, aes(x = Ozone, fill = as.factor(Year)), na.rm = TRUE)+
+  geom_density(alpha = 0.5)+
+  scale_fill_manual(values = c("darkgreen", "darkblue"))+
+  labs(x = "Ozone AQI", y = "Density", fill = "")
 
+#2
+ggplot(EPAair, aes(x = as.factor(Year), y = Ozone))+
+  geom_boxplot()+
+  stat_summary(geom = "text", fun.y = max, vjust = -1, size =4, label = c("b", "a"))+
+  labs(x = "", y = "Ozone AQI value")+
+  ylim(0, 150)
 
+#3
+ggplot(EPAair, aes(x = as.factor(Year), y = Ozone))+
+  geom_violin(draw_quantiles = 0.5)+
+  stat_summary(geom = "text", fun.y = max, vjust = -1, size = 4, label = c("b", "a"))+
+  labs(x = "", y = "Ozone AQI Value")+
+  ylim(0, 150)
 ```
 
 ## Linear Regression
@@ -165,11 +194,16 @@ For the NTL-LTER dataset, can we predict PM2.5 from Ozone?
 
 #Exercise 3: Run a linear regression PM2.5 by Ozone. Find the p-value and R-squared value. 
 
-
+pmo3 <- lm(data = EPAair, PM2.5 ~ Ozone)
+summary(pmo3)
+#r^2 is very low
+#but p-value is signficant 
+#we want to add more variables to increase R^2
 
 #Exercise 4: Build a scatterplot. Add a line and standard error for the linear regression. 
-
-
+ggplot(EPAair, aes(x = Ozone, y = PM2.5))+
+  geom_point()+
+  geom_smooth(method = "lm", col="blue")
 
 ```
 
@@ -181,17 +215,25 @@ What other variables can we add to improve model?
 ```{r}
 
 #Exercise 5: Build correlation plots and identify more possible explanatory variables to add to the regression.
+library(dplyr)
+EPAair.corr <- EPAair %>% 
+  select(meanLat:PM2.5) %>% 
+  na.omit()
 
-
+EPAaircorr2 <- cor(EPAair.corr)
+corrplot.mixed(EPAaircorr2, upper = "ellipse")  
 
 
 #Exercise 6: Choose a model by AIC in a Stepwise Algorithm. Do the results from AIC match the variables you selected on Exercise 5?
-
-
-
+#omit NAs? 
+EPAairAIC <- lm(data = EPAair, PM2.5 ~ Ozone + Month + 
+              Year + meanLng + meanLat)
+step(EPAairAIC)
+summary(EPAairAIC) #R^2 improved just a bit, but isn't great
+#maybe the relationships here are non-linear 
 
 #Exercise 7: Run another regression using the variables selected on Exercise 6. Compare r-squared value with the one from Exercise 5. 
-
+#this is the same as above regression 
 ```
 
 
