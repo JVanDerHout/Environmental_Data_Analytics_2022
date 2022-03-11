@@ -99,7 +99,11 @@ BRA_complete <- inner_join(Rainfall_BR_processed,Temp_BR_processed)
 ```{r}
 #Exercise 7: Create a time series objects for each series using ts(). Make sure you specify the starting point and frequency.
 
+fmonth <- month(first(BRA_complete$date))
+fyear <- year(first(BRA_complete$date))
 
+BR_Rain_ts <- ts(BRA_complete$rainfall, start = c(fmonth,fyear), frequency = 12)
+BR_Temp_ts <- ts(BRA_complete$Temperature_C, start = c(fmonth,fyear), frequency = 12)
 
 ```
 

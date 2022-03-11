@@ -30,6 +30,10 @@ The completed exercise is due on Monday, February 28 at 7:00 pm.
 getwd()
 library(tidyverse)
 library(agricolae)
+library(lubridate)
+NTL_LTER <- read.csv("../Data/Raw/NTL-LTER_Lake_ChemistryPhysics_Raw.csv", stringsAsFactors = TRUE)
+NTL_LTER$sampledate <- as.Date(NTL_LTER$sampledate , format = "%m/%d/%Y")
+class(NTL_LTER$sampledate)
 
 #2
 mytheme <- theme_classic(base_size = 14) +
@@ -44,8 +48,8 @@ Our first research question is: Does mean lake temperature recorded during July 
 
 3. State the null and alternative hypotheses for this question:
 > Answer:
-H0: 
-Ha: 
+H0: The mean lake temperature does not change with depth across all lakes, there is no difference. P-value greater than 0.05.
+Ha: The mean lake temperature is observed to change with depth across all lakes, there is a significant difference. P-value less than 0.05.
 
 
 4.  Wrangle your NTL-LTER dataset with a pipe function so that the records meet the following criteria: 
@@ -57,31 +61,40 @@ Ha:
 
 ```{r scatterplot}
 #4
-
+NTL_LTER <- NTL_LTER %>% 
+  mutate(samplemonth = month(sampledate)) %>% 
+  filter(samplemonth == 7) %>% 
+  select(lakename, year4, daynum, depth, temperature_C) %>% 
+  drop_na()
 
 #5
-
+ggplot(NTL_LTER, aes(x = depth, y = temperature_C))+
+  geom_point(alpha = 0.5)+
+  geom_smooth(method = "lm", se = FALSE)+
+  ylim(0, 35)+
+  labs(x = expression("Temperature "(degree*C)), y = "Depth (m)")
 
 ```
 
 
 6. Interpret the figure. What does it suggest with regards to the response of temperature to depth? Do the distribution of points suggest about anything about the linearity of this trend?
 
-> Answer: 
+> Answer: Temperature appears to be decreasing with depth, and the trend appears to be mostly linear with exceptions at deeper depths where there are also fewer datapoints. 
 
 
 7. Perform a linear regression to test the relationship and display the results
 
 ```{r linear.regression}
 #7
-
+temp.depth <- lm(NTL_LTER$temperature_C ~ NTL_LTER$depth)
+summary(temp.depth)
 
 ```
 
 
 8. Interpret your model results in words. Include how much of the variability in temperature is explained by changes in depth, the degrees of freedom on which this finding is based, and the statistical significance of the result. Also mention how much temperature is predicted to change for every 1m change in depth. 
 
-> Answer:
+> Answer: This model accounted for 73.87% of the variability within the temperature data by conducting a linear regression on depth. This finding is based on 9726 degrees of freedom, and has a statistically significant p-value of 2e-16. The change in temperature based on every 1m change in depth is the slope of the model, which is -1.94621 degrees/ meter. 
 
 
 ---
@@ -96,18 +109,25 @@ Let's tackle a similar question from a different approach. Here, we want to expl
 
 ```{r temperature.model}
 #9
-
-
+NTLAIC <- lm(data = NTL_LTER, temperature_C ~ year4 + daynum + depth)
+step(NTLAIC)#26065.53 
+summary(NTLAIC)
+#take out year because it is the least significant
+temp.multiple <- lm(data = NTL_LTER, temperature_C ~ depth + daynum)
+step(temp.multiple) #overall AIC 26070.49
+AIC(NTLAIC, temp.multiple)
+#AIC with all variables is higher, so we keep all variables
+#all p-values are low, so it is probably useful to include all of them
 
 #10
-
-
+#run regression with all variable
+multiNTL <- lm(data = NTL_LTER, temperature_C ~ year4, daynum, depth)
+summary(multiNTL)
 ```
 
 11. What is the final set of explanatory variables that the AIC method suggests we use to predict temperature in our multiple regression? How much of the observed variance does this model explain? Is this an improvement over the model using only depth as the explanatory variable?
 
-> Answer: 
-
+> Answer: The final set of explanatory variables is the full set, year4, daynum, and depth. The R^2 value for this model accounts for 74.11% of the variance within the data. This is a slight improvement over the 73.87% explanatory power of the previous model using only depth. 
 
 
 ---
@@ -117,21 +137,30 @@ Let's tackle a similar question from a different approach. Here, we want to expl
 
 ```{r anova.model}
 #12
+NTL_anova <- aov(data = NTL_LTER, temperature_C ~ lakename)
+summary(NTL_anova)
 
+NTL_anova2 <- lm(data = NTL_LTER, temperature_C ~ lakename)
+summary(NTL_anova2)
 
 ```
 
 13. Is there a significant difference in mean temperature among the lakes? Report your findings. 
 
-> Answer: 
-
+> Answer: Yes, there is a significant difference (p = 2e-16) in mean tempearture between lakes. This leads to a rejection of the null hypothesis. 
 
 
 14. Create a graph that depicts temperature by depth, with a separate color for each lake. Add a geom_smooth (method = "lm", se = FALSE) for each lake. Make your points 50 % transparent. Adjust your y axis limits to go from 0 to 35 degrees. Clean up your graph to make it pretty. 
 
 ```{r scatterplot.2}
 #14.
-
+NTL_LTER.plot <- ggplot(NTL_LTER, aes(x = depth, y = temperature_C, color = lakename))+
+  geom_point(alpha = 0.5)+
+  geom_smooth(method = "lm", se = FALSE)+
+  ylim(0, 35)+
+  labs(x = "Depth (m)", y = expression("Temperature "(degree*C)), color = "Lake")+
+  scale_color_viridis_d()
+NTL_LTER.plot 
 
 ```
 
@@ -140,17 +169,22 @@ Let's tackle a similar question from a different approach. Here, we want to expl
 ```{r tukey.test}
 #15
 
+TukeyHSD(NTL_anova)
+lake.groups <- HSD.test(NTL_anova, "lakename", group = TRUE)
+lake.groups
+
+
 
 ```
 
 16.From the findings above, which lakes have the same mean temperature, statistically speaking, as Peter Lake? Does any lake have a mean temperature that is statistically distinct from all the other lakes?
 
->Answer:
-
+>Answer: Lakes with similar mean temperature to Peter lake include Ward Lake and Paul Lake. All lakes share at least one statistically significant similarity with another lake. 
  
 
 17. If we were just looking at Peter Lake and Paul Lake. What's another test we might explore to see whether they have distinct mean temperatures? 
 
->Answer: 
+>Answer: Paired T-test is a statistical test to compare two means, because there are just two lakes, this could be a good test to use. 
+
 
 
