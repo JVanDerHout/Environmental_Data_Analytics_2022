@@ -6,6 +6,7 @@ output: pdf_document
 editor_options:
   chunk_output_type: console
 ---
+Spatial analysis is really just a data frame with a geometry column. 
 
 ## Objectives
 1. Q&A on A07
@@ -13,10 +14,12 @@ editor_options:
 2. Q&A on M08 Recordings/Concepts
  * What makes data "spatial"?
  * Why location is important? 
+ *Raster parses landscape into a grid and is more like image data. Instead of a dataframe we are working with matrices. We aren't using raster data here because we don't have enough time.
  * Vector data model: points/lines/polygons
  * Spatial data structures: sfg, sfc, sf objects
- * Projections & Coordinate reference systems
+ * Projections & Coordinate reference systems. Necessary to move flat calculations to the sphere of the earth. WGS-84 is most popular one. 
  * Visualization techniques
+ *Geometry (geom) column shows the shapefile and coordinates, broken down into simple feature, simple feature geometry list column (sfc), and simple feature geometry (sfg)
 
 3. Spatial Analysis Exercises
  * Reading data into spatial dataframes
@@ -59,6 +62,7 @@ st_crs(epa_pm25_sites_sf)$epsg
 
 #Plot the data
 mapview(epa_pm25_sites_sf)
+
 ```
 
 ## 2.2 Read in and explore NC counties
@@ -69,7 +73,8 @@ Below we read in the USA counties shapefile, filtering for just the NC features 
 #
 counties_sf<- st_read('./Data/Spatial/cb_2018_us_county_20m.shp') %>% 
   filter(STATEFP == 37) #Filter for just NC Counties
-
+#use st_read to read a shapefile
+st_crs(counties_sf) #uses NAD83 CRS
 #
 mapView(counties_sf, zcol = "AWATER")
 ```
@@ -80,10 +85,13 @@ mapView(counties_sf, zcol = "AWATER")
 
 ```{r read HUCs shapefile}
 #Read the shapefile into an sf dataframe named "huc8_sf"
-
-
+huc8_sf <- st_read('./Data/Spatial/NCHUC8.shp')
+st_crs(huc8_sf) #uses WGS 84 coordinate reference system
+#counties uses NAD83 
 
 #View the data as a map, colored by the acreage in each
+mapview(huc8_sf)
+mapview(huc8_sf, zcol = "ACRES")
 
 
 ```
@@ -94,11 +102,16 @@ mapView(counties_sf, zcol = "AWATER")
 
 ```{r Select the Upper Neuse HUC 8}
 #Read the shapefile into an sf dataframe
+#zooming in on neuse
+neuse <- st_read('./Data/Spatial/NCHUC8.shp') %>% 
+  filter(SUBBASIN == 'Upper Neuse')
 
 
 
 #Create a map
-
+ggplot()+
+  geom_sf(data = huc8_sf, fill ='orange')+
+  geom_sf(data = neuse, fill = 'purple')
 
 ```
 
@@ -114,16 +127,24 @@ The URL '<https://raw.githubusercontent.com/ENV859/EnviroAtlasData/main/Wind_Ene
 
 ```{r}
 #Compute HUC8 wind energy
-
-
+WindEnergy <- st_read('https://raw.githubusercontent.com/ENV859/EnviroAtlasData/main/Wind_Energy.csv', colClasses = c('HUC_12'='factor')) %>% 
+  mutate(HUC_8 = substr(HUC_12, 1,8)) %>% 
+  group_by(HUC_8) %>% 
+  summarize(SumWindEnergy = sum(AvgWindEnergy))
 
 
 #Join to HUC_8 features
-
-
+huc8_sf_join = merge(x = huc8_sf,
+                     y = WindEnergy,
+                     by.x =
+                       'HUC_8',
+                     by.y = 'HUC_8')  
 
 
 #View the outputs
+ggplot(data = huc8_sf_join)+
+  geom_sf(aes(fill=SumWindEnergy))+
+  labs(title = 'Wind Energy by HUC 8', fill = 'MW/year')
 
 
 
@@ -154,11 +175,11 @@ On top of projecting any geographic data to adjust for the limitations of the so
 
 ```{r Transform the datasets to other coordinate reference systems}
 #Convert all to UTM Zone 17 (crs = 26917)
-epa_sf_utm <-      st_transform(epa_pm25_sites_sf, crs = 26917)
-counties_sf_utm <- 
-state_sf_utm <-    
-huc8_sf_utm <-     
-huc2_utm <-        
+epa_sf_utm <-       st_transform(epa_pm25_sites_sf, crs = 26917)
+counties_sf_utm <- st_transform(counties_sf, crs = 26917) 
+state_sf_utm <- st_transform()   
+huc8_sf_utm <- st_transform(huc8_sf, crs = 26917)   
+huc2_utm <- st_transform()       
 ```
 
 ## 3.3 Clipping and intersecting data
@@ -168,17 +189,23 @@ Select the counties in the "Triangle" (Chatham, Durham, Orange, and Wake). Then 
 
 ```{r EXERCISE: Clipping}
 #Select the Triangle counties from the sf_counties dataframe
+triangle_sf <- counties_sf_utm %>% 
+  filter(NAME %in% c('Chatham', 'Durham', 'Orange', 'Wake'))
 
-
-
+mapview(triangle_sf)
   
 #Grab the intersecting HUC_8s
+selected_HUCs <- huc8_sf_utm[triangle_sf,]
+mapview(selected_HUCs)
+#now we have selected based on location
 
-
+#***look up sp cheat sheet to get more info on all the things that can be done***
 
 #Intersect the HUC_8s
-
-
+#cookie batter & cookie cutter: clipping HUCs by counties
+clipped_HUCs <- huc8_sf_utm %>% 
+  st_intersection(triangle_sf)
+mapview(clipped_HUCs)
 
 
 ```

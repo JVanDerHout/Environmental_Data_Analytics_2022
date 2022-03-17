@@ -81,7 +81,7 @@ GasPlants <- st_read('https://opendata.arcgis.com/datasets/a0722062315143a7980ce
 #Explore
 class(GasPlants)
 names(GasPlants)
-str(GasPlants$geometry)
+str(GasPlants$geometry) 
 
 #View using sf plot
 plot(GasPlants['STATUS'],pch=16)
@@ -119,7 +119,9 @@ EPAair.sf <- EPAair.sites %>%
            crs=4326)
 
 #View the data using the methods above...
-
+plot(EPAair.sf['Site.Name'],pch=16)
+ggplot(data=EPAair.sf) + geom_sf()
+mapview(EPAair.sf)
 ```
 
 ### EXERCISE: Creating a spatial dataframe from known coordinates
@@ -155,7 +157,7 @@ Let's explore:
 ## EXERCISE: Buffering - a simple spatial analyis
 "Buffering" a simple feature extends the area outward a specified distance. The code below buffers Grainger Hall 1 "unit". 
 ```{r buffer Grainger hall}
-#Buffer Grainger Hall 1 unit
+#Buffer Grainger Hall 1 unit - demo not for use, weird result
 the_buffer <- sf_GraingerHall %>% st_buffer(1)
 
 #View the result
@@ -219,7 +221,7 @@ National Center for Ecological Analysis and Synthesis created a CRS summary shee
 ---
 
 ## EXERCISE: Spatial Analysis
-Say we want to the distance between our EPA sites and the nearest Gas Plant. We don't want to report the distances in degrees, so we first want to project our data into a projected crs. We'll use the UTM Zone 17 N - WGS84 crs (EPSG = 32617) 
+Say we want to find the distance between our EPA sites and the nearest Gas Plant. We don't want to report the distances in degrees, so we first want to project our data into a projected crs. We'll use the UTM Zone 17 N - WGS84 crs (EPSG = 32617) 
 
 
 ```{r Transform the dataset}
