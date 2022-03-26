@@ -18,8 +18,6 @@ editor_options:
 getwd()
 library(tidyverse)
 library(lubridate)
-
-#install.packages("rvest")
 library(rvest)
 
 # Set theme
@@ -207,6 +205,37 @@ ggplot(df_withdrawals,aes(x=Date,y=Avg_Withdrawals_mgd)) +
        y="Withdrawal (mgd)",
        x="Date")
 
+#again with 0218-0238
+the_base_url <- 'https://www.ncwater.org/WUDC/app/WWATR/report/view'
+the_facility <- '0218-0238'
+the_year <- 2015
+the_scrape_url <- paste0(the_base_url, '/', the_facility, '/', the_year)
+print(the_scrape_url)
+the_website <- read_html(the_scrape_url)
+the_registrant_tag <- '.table tr:nth-child(1) td:nth-child(2)'
+the_facility_name_tag <- 'tr:nth-child(2) th+ .left:nth-child(2)'
+the_facility_id_tag <- 'tr:nth-child(2) .left~ .left+ td.left'
+the_data_tag <- '.table:nth-child(7) td:nth-child(7) , .table:nth-child(7) td:nth-child(3)'
+the_registrant <- the_website %>% html_nodes(the_registrant_tag) %>% html_text()
+the_facility_name <- the_website %>%   html_nodes(the_facility_name_tag) %>%  html_text()
+the_facility_type <- the_website %>% html_nodes(the_facility_id_tag) %>% html_text()
+the_withdrawals <- the_website %>% html_nodes(the_data_tag) %>% html_text()
+
+df_withdrawals <- data.frame("Month" = rep(1:12),
+                             "Year" = rep(the_year,12),
+                             "Avg_Withdrawals_mgd" = as.numeric(the_withdrawals)) %>% 
+  mutate(Registrant = !!the_registrant,
+         Facility_name = !!the_facility_name,
+         Facility_type = !!the_facility_type,
+         Date = my(paste(Month,"-",Year)))
+
+ggplot(df_withdrawals,aes(x=Date,y=Avg_Withdrawals_mgd)) + 
+  geom_line() + 
+  geom_smooth(method="loess",se=FALSE) +
+  labs(title = paste("2020 Water usage data for",the_registrant),
+       subtitle = the_facility_name,
+       y="Withdrawal (mgd)",
+       x="Date")
 ```
 
 Run the above; it should produce the same result as the previous R chunk. HOWEVER, change the year variable to `2015` and re-run the chunk. Change the facility ID to `0218-0238` and run again. Now, we have a nifty little scraping tool!
